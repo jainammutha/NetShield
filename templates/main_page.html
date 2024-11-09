@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome, {{ name }}</title>
+</head>
+<body>
+  <div class="signin main-page">
+    <div class="back-img">
+      <h2 class="active">Welcome</h2>
+      <div class="sign-in-text">
+        <h3 class="active">{{ name }}</h3>
+      </div>
+      <div class="layer">
+      </div>
+      <p class="point">&#9660;</p>
+    </div>
+    <div class="form-section main-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <h4>You have successfully logged in and passed the face recognition and liveness check.</h4>
+      <div class="meme-container">
+        <h3>(づ｡◕‿‿◕｡)づ &nbsp; Python &nbsp; >>>>>>> &nbsp; Java &nbsp; (づ｡◕‿‿◕｡)づ</h3>
+        <img src="{{url_for('static', filename='photos/python_java_meme.gif')}}" alt="Python vs Java Meme">
+      </div>
+      <div class="button-container">
+        <a href="{{ url_for('update_face') }}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+          Update Face
+        </a>
+        <a href="{{ url_for('change_password') }}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">
+          Change Password
+        </a>
+        <a href="{{ url_for('login') }}" class="mdl-button mdl-js-button mdl-button--raised">
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
