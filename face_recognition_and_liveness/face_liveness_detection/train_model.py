@@ -20,6 +20,9 @@ import argparse
 import pickle
 import cv2
 import os
+from tensorflow.keras.applications import MobileNetV2 # alternative model
+from tensorflow.keras.layers import GlobalAveragePooling2D # added layer
+from tensorflow.keras.models import Model # added model class
 
 # construct the argument parser and parse the arguments
 parser = argparse.ArgumentParser()
@@ -121,7 +124,7 @@ print(classification_report(y_test.argmax(axis=1), predictions.argmax(axis=1), t
 
 # save model to disk
 print(f"[INFO serializing network to '{args['model']}']")
-model.save(args['model'], save_format='h5')
+model.save(args['model'].replace('.h5', '.keras'), save_format='keras')  # updated to use .keras format
 
 # save the label encoder to disk
 with open(args['le'], 'wb') as file:

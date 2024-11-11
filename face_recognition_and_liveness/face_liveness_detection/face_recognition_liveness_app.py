@@ -11,6 +11,9 @@ import imutils
 import pickle
 import time
 import cv2
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 # if you want to run this file from the shell,
 # uncomment these lines below and delete the function header and return
@@ -190,7 +193,7 @@ def recognition_liveness(model_path, le_path, detector_folder, encodings, confid
     return name, label_name
         
 if __name__ == '__main__':
-    name, label_name = recognition_liveness('liveness.model', 'label_encoder.pickle', 
-                                            'face_detector', '../face_recognition/encoded_faces.pickle', confidence=0.5)
+    name, label_name = recognition_liveness('face_recognition_and_liveness/face_liveness_detection/dataset/model.keras', 'face_recognition_and_liveness/face_liveness_detection/dataset/label_encoder.pkl', 
+                                            'face_detector', '../face_recognition/encoded_faces.pickle', confidence=0.8)
     print(name, label_name)
         
