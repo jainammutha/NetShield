@@ -68,19 +68,23 @@ def login():
 
             print(f"Checking USB authentication for user: {username}")
 
-            # Check USB authentication using the user's auth key
-            try:
-                with open(usb_auth_key_path, "r") as f:
-                    usb_auth_key = f.read().strip()
-                    if user_auth_key == usb_auth_key:  # Match the user's auth key with the USB key
-                        session['name'] = user.name  # Store the user's name in the session
-                        flash("USB authentication successful!", "success")
-                        print("Redirecting to main page...")  # Debugging statement
-                        return redirect(url_for('main'))  # Redirect to the main page
-                    else:
-                        print("USB authentication failed. Keys do not match. Proceeding to face recognition.")
-            except FileNotFoundError:
-                print(f"Warning: USB auth key file not found at {usb_auth_key_path}. Proceeding to face recognition.")
+            # Check if usb_auth_key_path is valid
+            if usb_auth_key_path is not None:
+                # Check USB authentication using the user's auth key
+                try:
+                    with open(usb_auth_key_path, "r") as f:
+                        usb_auth_key = f.read().strip()
+                        if user_auth_key == usb_auth_key:  # Match the user's auth key with the USB key
+                            session['name'] = user.name  # Store the user's name in the session
+                            flash("USB authentication successful!", "success")
+                            print("Redirecting to main page...")  # Debugging statement
+                            return redirect(url_for('main'))  # Redirect to the main page
+                        else:
+                            print("USB authentication failed. Keys do not match. Proceeding to face recognition.")
+                except FileNotFoundError:
+                    print(f"Warning: USB auth key file not found at {usb_auth_key_path}. Proceeding to face recognition.")
+            else:
+                print("Warning: No USB device found. Proceeding to face recognition.")
 
             # Perform Face Recognition only if USB authentication fails
             try:
