@@ -16,10 +16,13 @@ def encode_faces(dataset_path, encodings_path):
             for filename in os.listdir(person_dir):
                 img_path = os.path.join(person_dir, filename)
                 image = cv2.imread(img_path)
+                if image is None:
+                    print(f"[WARNING] Unable to read image: {img_path}")
+                    continue  # Skip unreadable images
                 rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
                 # Detect the (x, y)-coordinates of the bounding boxes
-                boxes = face_recognition.face_locations(rgb, model="hog")
+                boxes = face_recognition.face_locations(rgb, model="cnn")
 
                 # Compute the facial embedding for the face
                 encodings = face_recognition.face_encodings(rgb, boxes)
@@ -37,19 +40,20 @@ def encode_faces(dataset_path, encodings_path):
 
 def encode_single_face(image_path, name, encodings_path):
     # Load the existing encodings
+    known_encodings, known_names = [], []
     if os.path.exists(encodings_path):
         with open(encodings_path, "rb") as f:
             data = pickle.load(f)
-        known_encodings = data["encodings"]
-        known_names = data["names"]
-    else:
-        known_encodings = []
-        known_names = []
+        known_encodings = data.get("encodings", [])
+        known_names = data.get("names", [])
 
     # Load and encode the new face
     image = cv2.imread(image_path)
+    if image is None:
+        print(f"[WARNING] Unable to read image: {image_path}")
+        return  # Exit if the image cannot be read
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    boxes = face_recognition.face_locations(rgb, model="hog")
+    boxes = face_recognition.face_locations(rgb, model="cnn")
     encodings = face_recognition.face_encodings(rgb, boxes)
 
     # Add the new encoding

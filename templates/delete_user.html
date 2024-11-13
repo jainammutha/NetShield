@@ -1,0 +1,31 @@
+<!-- templates/delete_user.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete User</title>
+</head>
+<body>
+    <h1>Delete User</h1>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('delete_user_page') }}" method="POST">
+        <label for="username">Enter Username to Delete:</label>
+        <input type="text" id="username" name="username" required>
+        <button type="submit">Delete User</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('login') }}">Back to Login Page</a>
+</body>
+</html>

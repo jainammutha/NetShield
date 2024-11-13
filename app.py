@@ -7,9 +7,7 @@ import base64
 import secrets
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from face_recognition_and_liveness.face_recognition.encode_faces import encode_single_face
-from pen import find_usb_storage_with_secure_file
 import tensorflow as tf
 from tensorflow import keras
 from face_recognition_and_liveness.face_liveness_detection.face_recognition_liveness_app import recognition_liveness
@@ -26,7 +24,6 @@ app.secret_key = 'web_app_for_face_recognition_and_liveness'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
 class Users(db.Model):
     username = db.Column(db.String(100), primary_key=True)
@@ -93,7 +90,7 @@ def login():
                     'face_recognition_and_liveness/face_liveness_detection/dataset/label_encoder.pkl',
                     'face_recognition_and_liveness/face_liveness_detection/face_detector',
                     'face_recognition_and_liveness/face_recognition/encoded_faces.pickle',
-                    confidence=0.8
+                    confidence=0.5
                 )
 
                 if user.name == detected_name and label_name == 'real':
@@ -230,6 +227,39 @@ def change_password():
         return redirect(url_for('main'))
 
     return render_template('change_password.html')
+
+@app.route('/delete_user', methods=['GET', 'POST'])
+def delete_user_page():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        user = Users.query.filter_by(username=username).first()
+        
+        if user:
+            # Construct the paths to the user's files
+            face_image_path = f"face_recognition_and_liveness/face_recognition/dataset/{username}.jpg"
+            auth_key_path = f"face_recognition_and_liveness/face_recognition/dataset/{username}_auth_key.txt"
+            
+            # Delete the user from the database
+            db.session.delete(user)
+            db.session.commit()
+            
+            # Delete the user's face image file if it exists
+            if os.path.exists(face_image_path):
+                os.remove(face_image_path)
+                logging.info(f"Deleted face image for user: {username}")
+            
+            # Delete the user's authentication key file if it exists
+            if os.path.exists(auth_key_path):
+                os.remove(auth_key_path)
+                logging.info(f"Deleted auth key for user: {username}")
+            
+            flash("User deleted successfully", "success")
+        else:
+            flash("User not found", "error")
+        
+        return redirect(url_for('delete_user_page'))  # Redirect to the same page after deletion
+
+    return render_template('delete_user.html')  # Render the delete user page for GET requests
 
 if __name__ == '__main__':
     with app.app_context():

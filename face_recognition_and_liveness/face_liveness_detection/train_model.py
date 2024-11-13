@@ -2,17 +2,12 @@
 import matplotlib
 matplotlib.use('Agg') # Agg is used for writing files
 
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from face_liveness_detection.livenessnet import build_liveness_model # updated import
+from livenessnet import LivenessNet # our model
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from imutils import paths
 
-import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,9 +15,10 @@ import argparse
 import pickle
 import cv2
 import os
-from tensorflow.keras.applications import MobileNetV2 # alternative model
-from tensorflow.keras.layers import GlobalAveragePooling2D # added layer
-from tensorflow.keras.models import Model # added model class
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.optimizers import Adam
 
 # construct the argument parser and parse the arguments
 parser = argparse.ArgumentParser()
@@ -93,17 +89,11 @@ INIT_LR = 1e-4 # initial learning rate
 BATCH_SIZE = 4
 EPOCHS = 50
 
-# Use a learning rate schedule instead of decay
-learning_rate_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=INIT_LR,
-    decay_steps=EPOCHS,
-    decay_rate=0.96,  # Adjust this value as needed
-    staircase=True)
-
+# we don't need early stopping here because we have a small dataset, there is no need to do so
 # initialize the optimizer and model
 print('[INFO] compiling model...')
-optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_schedule)
-model = build_liveness_model(input_shape=(32, 32, 3), num_classes=len(le.classes_)) # updated model building
+optimizer = tf.keras.optimizers.Adam(learning_rate=INIT_LR)
+model = LivenessNet.build(width=32, height=32, depth=3, classes=len(le.classes_))
 model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # early stopping
@@ -124,7 +114,7 @@ print(classification_report(y_test.argmax(axis=1), predictions.argmax(axis=1), t
 
 # save model to disk
 print(f"[INFO serializing network to '{args['model']}']")
-model.save(args['model'].replace('.h5', '.keras'), save_format='keras')  # updated to use .keras format
+model.save(args['model'].replace('.h5', '.keras'), save_format='keras')
 
 # save the label encoder to disk
 with open(args['le'], 'wb') as file:
