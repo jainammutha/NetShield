@@ -8,6 +8,7 @@ def encode_faces(dataset_path, encodings_path):
     # Initialize the list of known encodings and known names
     known_encodings = []
     known_names = []
+    user_images = {}  # New dictionary to map usernames to their encodings
 
     # Loop over the image paths in our dataset
     for name in os.listdir(dataset_path):
@@ -31,21 +32,25 @@ def encode_faces(dataset_path, encodings_path):
                 for encoding in encodings:
                     known_encodings.append(encoding)
                     known_names.append(name)
+                    if name not in user_images:
+                        user_images[name] = []  # Initialize list for the user
+                    user_images[name].append(encoding)  # Link encoding to username
 
-    # Dump the facial encodings + names to disk
+    # Dump the facial encodings + names + user images to disk
     print("[INFO] Serializing encodings...")
-    data = {"encodings": known_encodings, "names": known_names}
+    data = {"encodings": known_encodings, "names": known_names, "user_images": user_images}
     with open(encodings_path, "wb") as f:
         f.write(pickle.dumps(data))
 
 def encode_single_face(image_path, name, encodings_path):
     # Load the existing encodings
-    known_encodings, known_names = [], []
+    known_encodings, known_names, user_images = [], [], {}  # Updated to include user_images
     if os.path.exists(encodings_path):
         with open(encodings_path, "rb") as f:
             data = pickle.load(f)
         known_encodings = data.get("encodings", [])
         known_names = data.get("names", [])
+        user_images = data.get("user_images", {})  # Load user images
 
     # Load and encode the new face
     image = cv2.imread(image_path)
@@ -60,9 +65,12 @@ def encode_single_face(image_path, name, encodings_path):
     for encoding in encodings:
         known_encodings.append(encoding)
         known_names.append(name)
+        if name not in user_images:
+            user_images[name] = []  # Initialize list for the user
+        user_images[name].append(encoding)  # Link encoding to username
 
     # Save the updated encodings
-    data = {"encodings": known_encodings, "names": known_names}
+    data = {"encodings": known_encodings, "names": known_names, "user_images": user_images}
     with open(encodings_path, "wb") as f:
         f.write(pickle.dumps(data))
 
