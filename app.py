@@ -271,9 +271,9 @@ def delete_user_page():
                 os.remove(auth_key_path)
                 logging.info(f"Deleted auth key for user: {username}")
             
-            flash("User deleted successfully", "success")
+            flash("User deleted successfully", "danger")
         else:
-            flash("User not found", "error")
+            flash("User not found", "info")
         
         return redirect(url_for('delete_user_page'))  # Redirect to the same page after deletion
 
