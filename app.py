@@ -129,8 +129,11 @@ def register():
         if existing_user:
             return render_template('register.html', error="Username already exists")
         
-        # Generate a random key for USB authentication
-        auth_key = secrets.token_hex(16)
+        # Generate a unique key for USB authentication
+        while True:
+            auth_key = secrets.token_hex(16)
+            if not Users.query.filter_by(auth_key=auth_key).first():  # Ensure the key is unique
+                break
 
         # Save the key to a file
         auth_key_path = f"face_recognition_and_liveness/face_recognition/dataset/{username}_auth_key.txt"
