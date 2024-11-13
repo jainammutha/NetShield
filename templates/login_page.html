@@ -21,23 +21,30 @@
       <p class="point">&#9650;</p>
     </div><!--/.back-img-->
     <div class="form-section">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% endwith %}
       {% if incorrect == True %}
       <p style="color:red"> Username or Password is incorrect </p>
       {% elif invalid_user == True %}
       <p style="color:red"> You are not {{username}} </p>
       {% endif %}
       <form method="POST" action="{{ url_for('login') }}">
-        <!--Email-->
+        <!--Username-->
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input class="mdl-textfield__input" type="text" id="sample3" name="username">
-          <label class="mdl-textfield__label" for="sample3">Username</label>
+          <input class="mdl-textfield__input" type="text" id="username" name="username" required>
+          <label class="mdl-textfield__label" for="username">Username</label>
         </div>
         <br/>
         <br/>
         <!--Password-->
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input pattern=".{8,}" class="mdl-textfield__input" type="password" id="sample3" name="password">
-          <label class="mdl-textfield__label" for="sample3">Password</label>
+          <input pattern=".{8,}" class="mdl-textfield__input" type="password" id="password" name="password" required>
+          <label class="mdl-textfield__label" for="password">Password</label>
           <span class="mdl-textfield__error">Minimum 8 characters</span>
         </div>
         <br/>
@@ -47,14 +54,16 @@
         <input type="checkbox" id="checkbox-1" class="mdl-checkbox__input" checked>
         <span class="keep-text mdl-checkbox__label">Keep me Signed In</span>
       </label>
-        <button type="submit" class="sign-in-btn mdl-button mdl-js-ripple-effect mdl-js-button mdl-button--raised mdl-button--colored">
-        Sign In
-        </button><!--/button-->
+        <div class="button-container">
+          <button type="submit" class="sign-in-btn mdl-button mdl-js-ripple-effect mdl-button--raised mdl-button--colored">
+            Sign In
+          </button><!--/button-->
+          
+          <button onclick="window.location.href='/register'" class="register-btn mdl-button mdl-js-ripple-effect mdl-button--raised">
+            Register
+          </button>
+        </div><!--/.button-container-->
       </form>
-      <br>
-      <button onclick="window.location.href='/register'" class="register-btn mdl-button mdl-js-ripple-effect mdl-js-button mdl-button--raised">
-        Register
-      </button>
     </div><!--/.form-section-->
 
  </div><!--/.signin-->

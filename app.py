@@ -20,7 +20,7 @@ logging.getLogger('tensorflow').setLevel(logging.ERROR)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = 'web_app_for_face_recognition_and_liveness'
+app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -72,7 +72,8 @@ def login():
                     with open(usb_auth_key_path, "r") as f:
                         usb_auth_key = f.read().strip()
                         if user_auth_key == usb_auth_key:  # Match the user's auth key with the USB key
-                            session['name'] = user.name  # Store the user's name in the session
+                            session['username'] = user.username  # Store the username in the session
+                            session['name']=user.name
                             flash("USB authentication successful!", "success")
                             print("Redirecting to main page...")  # Debugging statement
                             return redirect(url_for('main'))  # Redirect to the main page
@@ -93,25 +94,33 @@ def login():
                     confidence=0.5
                 )
 
-                if user.name == detected_name and label_name == 'real':
-                    session['name'] = user.name
+                print(f"Detected name: {detected_name}, Expected name: {user.username}, Label: {label_name}")
+
+                # Normalize the comparison to be case-insensitive
+                if user.username.lower() == detected_name.lower() and label_name == 'real':
+                    session['username'] = user.username  # Store the user's username in the session
+                    session['name']=user.name
                     flash("Face recognition successful!", "success")
-                    return redirect(url_for('main'))
+                    print("Redirecting to main page after face recognition...")  # Debugging statement
+                    return redirect(url_for('main'))  # Ensure this line is reached
                 else:
+                    print("Face recognition failed. Detected name does not match.")
                     return render_template('login_page.html', invalid_user=True, username=username)
             except Exception as e:
                 print(f"Face recognition error: {e}")
                 return render_template('login_page.html', error="Face recognition failed.")
         else:
+            print("User credentials are incorrect.")
             return render_template('login_page.html', incorrect=True)
 
     return render_template('login_page.html')
 
 @app.route('/main', methods=['GET'])
 def main():
-    if 'name' in session:
+    if 'username' in session and 'name' in session:
+        username = session['username']
         name = session['name']
-        return render_template('main_page.html', name=name)
+        return render_template('main_page.html', username=username, name=name)
     else:
         return redirect(url_for('login'))
 
@@ -123,6 +132,10 @@ def register():
         name = request.form['name']
         password = request.form['password']
         face_image = request.form['face_image']
+        
+        # Validate inputs
+        if not username or not name or not password or not face_image:
+            return render_template('register.html', error="All fields are required")
         
         # Check if username already exists
         existing_user = Users.query.filter_by(username=username).first()
@@ -152,8 +165,10 @@ def register():
             with open(image_path, "wb") as f:
                 f.write(face_image_data)
 
+            # Encode the face and link it with the username
             encodings_path = "face_recognition_and_liveness/face_recognition/encoded_faces.pickle"
-            encode_single_face(image_path, name, encodings_path)
+            encode_single_face(image_path, username, encodings_path)  # Use username for encoding
+
         else:
             return render_template('register.html', error="Face image is required")
         
@@ -189,10 +204,10 @@ def update_face():
             with open(image_path, "wb") as f:
                 f.write(face_image_data)
             
-            # Encode the face
+            # Encode the face and link it with the username
             encodings_path = "face_recognition_and_liveness/face_recognition/encoded_faces.pickle"
-            encode_single_face(image_path, session['name'], encodings_path)
-            
+            encode_single_face(image_path, user.username, encodings_path)
+
             return render_template('update_face.html', success="Face updated successfully")
         else:
             return render_template('update_face.html', error="Face image is required")
@@ -263,6 +278,12 @@ def delete_user_page():
         return redirect(url_for('delete_user_page'))  # Redirect to the same page after deletion
 
     return render_template('delete_user.html')  # Render the delete user page for GET requests
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)  # Remove 'username' from the session
+    flash("You have been logged out.", "info")
+    return redirect(url_for('login'))  # Redirect to the login page
 
 if __name__ == '__main__':
     with app.app_context():
